@@ -1,0 +1,13 @@
+[Unit]
+Description=medusa_exporter
+
+[Service]
+Type=simple
+Environment="ARGS=--web.telemetry-path=/metrics --web.listen-address=:19500 --collect.interval=600"
+EnvironmentFile=-/etc/default/medusa_exporter
+ExecStart=/usr/bin/medusa_exporter $ARGS
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

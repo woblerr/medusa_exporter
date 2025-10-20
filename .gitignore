@@ -1,0 +1,32 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.html
+*.zip
+*.tar
+*.tar.gz
+.DS_Store
+
+# Binary file
+medusa_exporter
+
+# Service file
+medusa_exporter.service
+
+# Release dir
+/dist
+
+# VSCode
+/.vscode
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Exclude vendor folder from ignore
+!/vendor/**/*

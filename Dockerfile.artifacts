@@ -1,0 +1,14 @@
+FROM goreleaser/goreleaser:v2.11.2 as builder
+WORKDIR /build
+COPY . /build
+RUN goreleaser release --snapshot --skip=publish --clean
+
+FROM alpine:3.21
+COPY --from=builder /build/dist/ /dist/
+RUN mkdir -p /artifacts && \
+    cp /dist/*.tar.gz /artifacts/ && \
+    cp /dist/*.rpm /artifacts/ && \
+    cp /dist/*.deb /artifacts/ && \
+    cp /dist/*.txt /artifacts/ && \
+    ls -la /artifacts/*
+CMD ["sleep", "150"]
