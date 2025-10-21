@@ -8,10 +8,6 @@ Prometheus exporter for [cassandra-medusa](https://github.com/thelastpickle/cass
 
 The metrics are collected based on result of `medusa list-backups --output json` command. You need to run exporter on the same host where Medusa was installed or inside Docker.
 
-## Grafana dashboard
-
-To get a dashboard for visualizing the collected metrics, you can use a ready-made dashboard [DRAFT Medusa Exporter for Apache Cassandra Dashboard]() or make your own.
-
 ## Collected metrics
 ### Backup metrics
 
