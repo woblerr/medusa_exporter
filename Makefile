@@ -10,6 +10,7 @@ HTTP_PORT := 19500
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 DOCKER_CONTAINER_E2E := $(shell docker ps -a -q -f name=$(APP_NAME)_e2e)
 HTTP_PORT_E2E := $(shell echo $$((10000 + ($$RANDOM % 10000))))
+MEDUSA_PREFIX ?= demo
 LDFLAGS = -X github.com/prometheus/common/version.Version=$(BRANCH)-$(GIT_REV) \
 		  -X github.com/prometheus/common/version.Branch=$(BRANCH) \
 		  -X github.com/prometheus/common/version.Revision=$(GIT_REV) \
@@ -20,6 +21,22 @@ LDFLAGS = -X github.com/prometheus/common/version.Version=$(BRANCH)-$(GIT_REV) \
 test:
 	@echo "Run tests for $(APP_NAME)"
 	TZ="Etc/UTC" go test -mod=vendor -timeout=60s -count 1  ./...
+
+.PHONY: test-e2e
+test-e2e:
+	@echo "Run end-to-end tests for $(APP_NAME)"
+	@if [ -n "$(DOCKER_CONTAINER_E2E)" ]; then docker rm -f "$(DOCKER_CONTAINER_E2E)"; fi;
+#   $(call e2e_docker_build)
+	$(call e2e_docker_build_custom)
+	$(call e2e_basic)
+	$(call e2e_prefix)
+	$(call e2e_tls_auth,/e2e_tests/web_config_empty.yml,false,false)
+	$(call e2e_tls_auth,/e2e_tests/web_config_TLS_noAuth.yml,true,false)
+	$(call e2e_tls_auth,/e2e_tests/web_config_TLSInLine_noAuth.yml,true,false)
+	$(call e2e_tls_auth,/e2e_tests/web_config_TLS_Auth.yml,true,basic)
+	$(call e2e_tls_auth,/e2e_tests/web_config_noTLS_Auth.yml,false,basic)
+	$(call e2e_tls_auth,/e2e_tests/web_config_TLS_RequireAnyClientCert.yml,true,cert,$(ROOT_DIR)/e2e_tests)
+	$(call e2e_tls_auth,/e2e_tests/web_config_TLS_RequireAndVerifyClientCert.yml,true,cert,$(ROOT_DIR)/e2e_tests)
 
 .PHONY: build
 build:
@@ -89,4 +106,33 @@ define service-remove
 	rm $(SERVICE_CONF_DIR)/$(APP_NAME).service
 	systemctl daemon-reload
 	systemctl reset-failed
+endef
+
+define e2e_docker_build
+	DOCKER_BUILDKIT=1 docker build --pull -f e2e_tests/Dockerfile --build-arg REPO_BUILD_TAG=$(BRANCH)-$(GIT_REV) -t $(APP_NAME)_e2e .
+endef
+
+define e2e_docker_build_custom
+	DOCKER_BUILDKIT=1 docker build --pull -f e2e_tests/Dockerfile --build-arg REPO_BUILD_TAG=$(BRANCH)-$(GIT_REV) --build-arg MEDUSA_BUILD_TYPE="custom" -t $(APP_NAME)_e2e .
+endef
+
+define e2e_basic
+	docker run -d -p $(HTTP_PORT_E2E):$(HTTP_PORT) --name=$(APP_NAME)_e2e $(APP_NAME)_e2e
+	@sleep 60
+	$(ROOT_DIR)/e2e_tests/run_e2e.sh $(HTTP_PORT_E2E)
+	docker rm -f $(APP_NAME)_e2e
+endef
+
+define e2e_prefix
+	docker run -d -p $(HTTP_PORT_E2E):$(HTTP_PORT) --env MEDUSA_PREFIX="$(MEDUSA_PREFIX)" --name=$(APP_NAME)_e2e $(APP_NAME)_e2e
+	@sleep 60
+	$(ROOT_DIR)/e2e_tests/run_e2e.sh $(HTTP_PORT_E2E) false false "" prefix
+	docker rm -f $(APP_NAME)_e2e
+endef
+
+define e2e_tls_auth
+	docker run -d -p $(HTTP_PORT_E2E):$(HTTP_PORT) --env EXPORTER_CONFIG="${1}" --name=$(APP_NAME)_e2e $(APP_NAME)_e2e
+	@sleep 60
+	$(ROOT_DIR)/e2e_tests/run_e2e.sh $(HTTP_PORT_E2E) ${2} ${3} "${4}"
+	docker rm -f $(APP_NAME)_e2e
 endef
