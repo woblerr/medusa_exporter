@@ -8,6 +8,8 @@ Prometheus exporter for [cassandra-medusa](https://github.com/thelastpickle/cass
 
 The metrics are collected based on result of `medusa list-backups --output json` command. You need to run exporter on the same host where Medusa was installed or inside Docker.
 
+Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/cassandra-medusa/pull/899) PR are required for the exporter.
+
 ## Collected metrics
 ### Backup metrics
 
@@ -39,7 +41,6 @@ The metrics are collected based on result of `medusa list-backups --output json`
 For `medusa_backup_duration_seconds` and `medusa_node_backup_duration_seconds` metrics the following logic is applied:
 * if backup/node backup is complete then value calculated;
 * if backup/node backup is not complete, then value is `0`, labels `stop_time` is `none`.
-
 
 ## Getting Started
 ### Building and running
@@ -138,4 +139,18 @@ rpm -ql medusa_exporter
 
 /etc/systemd/system/medusa_exporter.service
 /usr/bin/medusa_exporter
+```
+
+### Running tests
+
+Run the unit tests:
+
+```bash
+make test
+```
+
+Run the end-to-end tests:
+
+```bash
+make test-e2e
 ```
