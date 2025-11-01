@@ -46,6 +46,24 @@ case ${EXPORTER_AUTH} in
         ;;
 esac
 
+# Check if exporter is available.
+MAX_ATTEMPTS=10
+ATTEMPT=0
+SLEEP_SECONDS=5
+
+while [ ${ATTEMPT} -lt ${MAX_ATTEMPTS} ]; do
+    ATTEMPT=$((ATTEMPT + 1))
+    if curl -s ${CURL_FLAGS} -o /dev/null -w "%{http_code}" ${EXPORTER_URL} | grep -q "200"; then
+        break
+    else
+        echo "[INFO] exporter not available yet (attempt ${ATTEMPT})"
+        if [ ${ATTEMPT} -lt ${MAX_ATTEMPTS} ]; then
+            sleep ${SLEEP_SECONDS}
+        else
+            echo "[WARNING] exporter is not available after ${MAX_ATTEMPTS} attempts"
+        fi
+    fi
+done
 
 # A simple test to check the number of metrics.
 # Format: regex for metric | repetitions.
@@ -127,6 +145,7 @@ case "${MODE}" in
         )
         ;;
 esac
+
 # Check results.
 for i in "${REGEX_LIST[@]}"
 do
