@@ -298,3 +298,362 @@ func TestSetUpMetricValue(t *testing.T) {
 		})
 	}
 }
+
+func TestInitLastBackupStruct(t *testing.T) {
+	tests := []struct {
+		name string
+		want lastBackupsStruct
+	}{
+		{
+			name: "InitializedStruct",
+			want: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					finished:   0,
+					numObjects: 0,
+					size:       0,
+					started:    0,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					finished:   0,
+					numObjects: 0,
+					size:       0,
+					started:    0,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := initLastBackupStruct()
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("\nVariables do not match:\ngot: %+v\nwant: %+v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCompareLastBackups(t *testing.T) {
+	tests := []struct {
+		name        string
+		lastBackups lastBackupsStruct
+		backupData  backup
+		wantBackups lastBackupsStruct
+	}{
+		{
+			name:        "FirstFullBackup",
+			lastBackups: initLastBackupStruct(),
+			backupData: backup{
+				BackupType: fullLabel,
+				Started:    1697711900,
+				Finished:   1697712000,
+				Size:       1024,
+				NumObjects: 100,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+			},
+		},
+		{
+			name:        "FirstDifferentialBackup",
+			lastBackups: initLastBackupStruct(),
+			backupData: backup{
+				BackupType: differentialLabel,
+				Started:    1697711900,
+				Finished:   1697712000,
+				Size:       512,
+				NumObjects: 50,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
+				},
+			},
+		},
+		{
+			name: "NewerFullBackup",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+			},
+			backupData: backup{
+				BackupType: fullLabel,
+				Started:    1697722000,
+				Finished:   1697722100,
+				Size:       2048,
+				NumObjects: 200,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+			},
+		},
+		{
+			name: "OlderFullBackup",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+			},
+			backupData: backup{
+				BackupType: fullLabel,
+				Started:    1697711900,
+				Finished:   1697712000,
+				Size:       1024,
+				NumObjects: 100,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+			},
+		},
+		{
+			name: "DifferentialAfterFull",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+			},
+			backupData: backup{
+				BackupType: differentialLabel,
+				Started:    1697722000,
+				Finished:   1697722100,
+				Size:       512,
+				NumObjects: 50,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       512,
+					numObjects: 50,
+				},
+			},
+		},
+		{
+			name: "OlderDifferentialAfterFull",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+			},
+			backupData: backup{
+				BackupType: differentialLabel,
+				Started:    1697711900,
+				Finished:   1697712000,
+				Size:       512,
+				NumObjects: 50,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+			},
+		},
+		{
+			name: "FullAfterDifferential",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
+				},
+			},
+			backupData: backup{
+				BackupType: fullLabel,
+				Started:    1697722000,
+				Finished:   1697722100,
+				Size:       2048,
+				NumObjects: 200,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       2048,
+					numObjects: 200,
+				},
+			},
+		},
+		{
+			name: "NewerDifferentialOnly",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
+				},
+			},
+			backupData: backup{
+				BackupType: differentialLabel,
+				Started:    1697722000,
+				Finished:   1697722100,
+				Size:       256,
+				NumObjects: 25,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       256,
+					numObjects: 25,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			compareLastBackups(&tt.lastBackups, tt.backupData)
+			if !reflect.DeepEqual(tt.lastBackups, tt.wantBackups) {
+				t.Errorf("\nVariables do not match:\ngot: %+v\nwant: %+v", tt.lastBackups, tt.wantBackups)
+			}
+		})
+	}
+}

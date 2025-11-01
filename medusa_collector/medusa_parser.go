@@ -17,10 +17,25 @@ var execCommand = exec.Command
 
 const (
 	// https://golang.org/pkg/time/#Time.Format
-	layout        = "2006-01-02 15:04:05"
-	noneLabel     = "none"
-	noPrefixLabel = "no-prefix"
+	layout            = "2006-01-02 15:04:05"
+	noneLabel         = "none"
+	noPrefixLabel     = "no-prefix"
+	fullLabel         = "full"
+	differentialLabel = "differential"
 )
+
+type backupStruct struct {
+	backupType string
+	finished   int64
+	numObjects int
+	size       int64
+	started    int64
+}
+
+type lastBackupsStruct struct {
+	full         backupStruct
+	differential backupStruct
+}
 
 // Medusa specific command options.
 func returnDefaultExecArgs() []string {
@@ -139,5 +154,47 @@ func setUpMetric(metric *prometheus.GaugeVec, metricName string, value float64, 
 
 func resetMetrics() {
 	resetBackupMetrics()
+	resetBackupLastMetrics()
 	resetExporterMetrics()
+}
+
+func initLastBackupStruct() lastBackupsStruct {
+	lastBackups := lastBackupsStruct{}
+	lastBackups.full.backupType = fullLabel
+	lastBackups.differential.backupType = differentialLabel
+	return lastBackups
+}
+
+func compareLastBackups(lastBackups *lastBackupsStruct, backupData backup) {
+	switch backupData.BackupType {
+	case fullLabel:
+		if backupData.Started > lastBackups.full.started {
+			lastBackups.full.started = backupData.Started
+			lastBackups.full.finished = backupData.Finished
+			lastBackups.full.size = backupData.Size
+			lastBackups.full.numObjects = backupData.NumObjects
+		}
+		if backupData.Started > lastBackups.differential.started {
+			lastBackups.differential.started = backupData.Started
+			lastBackups.differential.finished = backupData.Finished
+			lastBackups.differential.size = backupData.Size
+			lastBackups.differential.numObjects = backupData.NumObjects
+		}
+	case differentialLabel:
+		if backupData.Started > lastBackups.differential.started {
+			lastBackups.differential.started = backupData.Started
+			lastBackups.differential.finished = backupData.Finished
+			lastBackups.differential.size = backupData.Size
+			lastBackups.differential.numObjects = backupData.NumObjects
+		}
+		// If no full backup exists yet, use differential backup data for full backup metrics.
+		// For Medusa differential backup not depends on full backup existence.
+		// If only differential backups exist, full backup metrics also will be set.
+		if lastBackups.full.started == 0 {
+			lastBackups.full.started = backupData.Started
+			lastBackups.full.finished = backupData.Finished
+			lastBackups.full.size = backupData.Size
+			lastBackups.full.numObjects = backupData.NumObjects
+		}
+	}
 }

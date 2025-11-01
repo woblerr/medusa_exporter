@@ -66,6 +66,9 @@ func StartPromEndpoint(version string, logger *slog.Logger) {
 
 // GetMedusaInfo get and parse Medusa info and set metrics
 func GetMedusaInfo(config, prefix string, logger *slog.Logger) {
+	// To calculate the time elapsed since the last completed full or differential backup.
+	currentUnixTime := time.Now().Unix()
+	lastBackups := initLastBackupStruct()
 	// The flag indicates whether it was possible to get data from the Medusa.
 	// By default, it's set to true.
 	getDataSuccessStatus := true
@@ -87,5 +90,14 @@ func GetMedusaInfo(config, prefix string, logger *slog.Logger) {
 	getExporterStatusMetrics(getDataSuccessStatus, prefix, setUpMetricValue, logger)
 	for _, singleBackup := range parseBackupData {
 		getBackupMetrics(singleBackup, prefix, setUpMetricValue, logger)
+		// Only completed backups are considered.
+		if singleBackup.Finished > 0 {
+			compareLastBackups(&lastBackups, singleBackup)
+		}
+	}
+	// If full backup exists, the values of metrics for differential backups also will be set.
+	// If not - metrics won't be set.
+	if lastBackups.full.started > 0 {
+		getBackupLastMetrics(lastBackups, currentUnixTime, setUpMetricValue, logger)
 	}
 }

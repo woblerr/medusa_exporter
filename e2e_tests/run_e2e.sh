@@ -50,16 +50,42 @@ esac
 # A simple test to check the number of metrics.
 # Format: regex for metric | repetitions.
 case "${MODE}" in
-    "prefix")
+    "only_diff_prefix")
+    # Check inly part of metrics.
+    # No full backup with this prefix.
         declare -a REGEX_LIST=(
-    '^medusa_backup_info{.*,backup_type="full",prefix="demo",.*} 1$|1'
+    '^medusa_backup_info{.*,backup_type="differential",prefix="only_diff_prefix",.*} 1$|1'
+    '^medusa_backup_info{.*,backup_type="full",prefix="only_diff_prefix",.*}|0'
+    '^medusa_backup_last_duration_seconds{backup_type="differential"}|1'
+    '^medusa_backup_last_duration_seconds{backup_type="full"}|1'
+    '^medusa_backup_last_objects{backup_type="differential"}|1'
+    '^medusa_backup_last_objects{backup_type="full"}|1'
+    '^medusa_backup_last_size_bytes{backup_type="differential"}|1'
+    '^medusa_backup_last_size_bytes{backup_type="full"}|1'
+    '^medusa_backup_status{.*,backup_type="differential"} 1$|1'
+    '^medusa_exporter_status{prefix="only_diff_prefix"} 1$|1'
+    '^medusa_node_backup_info{.*,backup_type="differential",.*} 1$|1'
+    '^medusa_node_backup_status{.*,backup_type="differential",.*} 1$|1'
+        )
+        ;;
+    "only_full_prefix")
+    # Check inly part of metrics.
+    # No differential backup with this prefix.
+        declare -a REGEX_LIST=(
+    '^medusa_backup_info{.*,backup_type="differential",prefix="only_full_prefix",.*}|0'
+    '^medusa_backup_info{.*,backup_type="full",prefix="only_full_prefix",.*} 1$|1'
+    '^medusa_backup_last_duration_seconds{backup_type="differential"}|1'
+    '^medusa_backup_last_duration_seconds{backup_type="full"}|1'
+    '^medusa_backup_last_objects{backup_type="differential"}|1'
+    '^medusa_backup_last_objects{backup_type="full"}|1'
+    '^medusa_backup_last_size_bytes{backup_type="differential"}|1'
+    '^medusa_backup_last_size_bytes{backup_type="full"}|1'
     '^medusa_backup_status{.*,backup_type="full"} 1$|1'
-    '^medusa_exporter_status{prefix="demo"} 1$|1'
+    '^medusa_exporter_status{prefix="only_full_prefix"} 1$|1'
     '^medusa_node_backup_info{.*,backup_type="full",.*} 1$|1'
     '^medusa_node_backup_status{.*,backup_type="full",.*} 1$|1'
         )
         ;;
-
     *)
         declare -a REGEX_LIST=(
     '^medusa_backup_completed_nodes{.*,backup_type="differential"} 1$|1'
@@ -70,10 +96,18 @@ case "${MODE}" in
     '^medusa_backup_incomplete_nodes{.*,backup_type="full"} 0$|1'
     '^medusa_backup_info{.*,backup_type="differential",prefix="no-prefix",.*} 1$|1'
     '^medusa_backup_info{.*,backup_type="full",prefix="no-prefix",.*} 1$|1'
+    '^medusa_backup_last_duration_seconds{backup_type="differential"}|1'
+    '^medusa_backup_last_duration_seconds{backup_type="full"}|1'
+    '^medusa_backup_last_objects{backup_type="differential"}|1'
+    '^medusa_backup_last_objects{backup_type="full"}|1'
+    '^medusa_backup_last_size_bytes{backup_type="differential"}|1'
+    '^medusa_backup_last_size_bytes{backup_type="full"}|1'
     '^medusa_backup_missing_nodes{.*,backup_type="differential"} 0$|1'
     '^medusa_backup_missing_nodes{.*,backup_type="full"} 0$|1'
     '^medusa_backup_objects{.*,backup_type="differential"}|1'
     '^medusa_backup_objects{.*,backup_type="full"}|1'
+    '^medusa_backup_since_last_completion_seconds{backup_type="differential"}|1'
+    '^medusa_backup_since_last_completion_seconds{backup_type="full"}|1'
     '^medusa_backup_size_bytes{.*,backup_type="differential"}|1'
     '^medusa_backup_size_bytes{.*,backup_type="full"}|1'
     '^medusa_backup_status{.*,backup_type="differential"} 1$|1'

@@ -29,6 +29,15 @@ Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/c
 | `medusa_node_backup_size` | node backup size in bytes | backup_name, backup_type, node_fqdn | |
 | `medusa_node_backup_objects` | number of objects in node backup | backup_name, backup_type, node_fqdn | |
 
+### Last backup metrics
+
+| Metric | Description |  Labels | Additional Info |
+| ----------- | ------------------ | ------------- | --------------- |
+| `medusa_backup_since_last_completion_seconds` | seconds since the last completed full or differential  backup | backup_type | |
+| `medusa_backup_last_duration_seconds` | backup duration for the last full or differential backup | backup_type | |
+| `medusa_backup_last_size_bytes` | backup size for the last full or differential backup | backup_type | |
+| `medusa_backup_last_objects` | number of objects in backup for the last full or differential backup | backup_type | |
+
 ### Exporter metrics
 
 | Metric | Description |  Labels | Additional Info |
@@ -41,6 +50,14 @@ Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/c
 For `medusa_backup_duration_seconds` and `medusa_node_backup_duration_seconds` metrics the following logic is applied:
 * if backup/node backup is complete then value calculated;
 * if backup/node backup is not complete, then value is `0`, labels `stop_time` is `none`.
+
+For `medusa_*_last_*` metrics the following logic is applied:
+* metrics are calculated only for completed backups;
+* metrics are set for both `backup_type="full"` and `backup_type="differential"`;
+* full backup is also considered as the last differential backup, so both labels will contain data from the latest full backup until a differential backup appears;
+* if the first backup in repository is differential (no full backup exists yet), both labels will contain data from the latest differential backup until a full backup appears;
+* after that, `backup_type="full"` will track the latest full backup, and `backup_type="differential"` will track the latest backup of any type;
+* metrics are not set if no backups exist at all.
 
 ## Getting Started
 ### Building and running

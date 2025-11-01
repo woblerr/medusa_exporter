@@ -35,7 +35,9 @@ cqlsh -e "INSERT INTO testks.tbl1 (id, val) VALUES (2, 'second');"
 # Differential backup.
 medusa backup --mode differential --backup-name "differential"
 # Full backup with prefix.
-medusa --prefix demo backup --mode full --backup-name "demo_full"
+medusa --prefix only_full_prefix backup --mode full --backup-name "only_full_prefix"
+# Only differential backup with prefix.
+medusa --prefix only_diff_prefix backup --mode differential --backup-name "only_diff_prefix"
 # Update exporter params.
 if [[ -n "${EXPORTER_CONFIG}" ]]; then
 	EXPORTER_COMMAND="${EXPORTER_COMMAND} --web.config.file=${EXPORTER_CONFIG}"
