@@ -2,8 +2,8 @@ ARG CASSANDRA_VERSION="5.0.4"
 ARG MEDUSA_BUILD_TYPE="release"
 ARG MEDUSA_VERSION="0.25.1"
 # For custom medusa builds
-ARG MEDUSA_REPO_TAG="add_json_output"
-ARG MEDUSA_REPO_URL="https://github.com/woblerr/cassandra-medusa"
+ARG MEDUSA_REPO_TAG="master"
+ARG MEDUSA_REPO_URL="https://github.com/thelastpickle/cassandra-medusa"
 
 FROM golang:1.24-bookworm AS builder
 ARG REPO_BUILD_TAG

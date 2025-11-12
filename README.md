@@ -52,7 +52,7 @@ For `medusa_backup_duration_seconds` and `medusa_node_backup_duration_seconds` m
 * if backup/node backup is not complete, then value is `0`, labels `stop_time` is `none`.
 
 For `medusa_*_last_*` metrics the following logic is applied:
-  * metrics are calculated only for completed backups:
+  * metrics are calculated only for completed backups;
   * if only full completed backups exist, only `backup_type="full"` metrics will be set;
   * if only differential backups exist, only `backup_type="differential"` metrics will be set;
   * if both types exist, both labels will be set with their respective latest backups;
