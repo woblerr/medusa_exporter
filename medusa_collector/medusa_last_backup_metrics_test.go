@@ -63,6 +63,70 @@ medusa_backup_since_last_completion_seconds{backup_type="full"} 10000
 			},
 		},
 		{
+			"GetBackupLastMetricsOnlyFull",
+			args{
+				lastBackupsStruct{
+					full: backupStruct{
+						backupType: fullLabel,
+						started:    1697711900,
+						finished:   1697712000,
+						size:       2048,
+						numObjects: 200,
+					},
+					differential: backupStruct{
+						backupType: differentialLabel,
+					},
+				},
+				1697732000,
+				setUpMetricValue,
+				`# HELP medusa_backup_last_duration_seconds Backup duration for the last full or differential backup.
+# TYPE medusa_backup_last_duration_seconds gauge
+medusa_backup_last_duration_seconds{backup_type="full"} 100
+# HELP medusa_backup_last_objects Number of objects in backup for the last full or differential backup.
+# TYPE medusa_backup_last_objects gauge
+medusa_backup_last_objects{backup_type="full"} 200
+# HELP medusa_backup_last_size_bytes Backup size for the last full or differential backup.
+# TYPE medusa_backup_last_size_bytes gauge
+medusa_backup_last_size_bytes{backup_type="full"} 2048
+# HELP medusa_backup_since_last_completion_seconds Time since last full or differential backup completion.
+# TYPE medusa_backup_since_last_completion_seconds gauge
+medusa_backup_since_last_completion_seconds{backup_type="full"} 20000
+`,
+			},
+		},
+		{
+			"GetBackupLastMetricsOnlyDifferential",
+			args{
+				lastBackupsStruct{
+					full: backupStruct{
+						backupType: fullLabel,
+					},
+					differential: backupStruct{
+						backupType: differentialLabel,
+						started:    1697711900,
+						finished:   1697712000,
+						size:       512,
+						numObjects: 50,
+					},
+				},
+				1697722000,
+				setUpMetricValue,
+				`# HELP medusa_backup_last_duration_seconds Backup duration for the last full or differential backup.
+# TYPE medusa_backup_last_duration_seconds gauge
+medusa_backup_last_duration_seconds{backup_type="differential"} 100
+# HELP medusa_backup_last_objects Number of objects in backup for the last full or differential backup.
+# TYPE medusa_backup_last_objects gauge
+medusa_backup_last_objects{backup_type="differential"} 50
+# HELP medusa_backup_last_size_bytes Backup size for the last full or differential backup.
+# TYPE medusa_backup_last_size_bytes gauge
+medusa_backup_last_size_bytes{backup_type="differential"} 512
+# HELP medusa_backup_since_last_completion_seconds Time since last full or differential backup completion.
+# TYPE medusa_backup_since_last_completion_seconds gauge
+medusa_backup_since_last_completion_seconds{backup_type="differential"} 10000
+`,
+			},
+		},
+		{
 			"GetBackupLastMetricsBothTypes",
 			args{
 				lastBackupsStruct{

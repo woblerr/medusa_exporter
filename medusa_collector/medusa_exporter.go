@@ -92,12 +92,11 @@ func GetMedusaInfo(config, prefix string, logger *slog.Logger) {
 		getBackupMetrics(singleBackup, prefix, setUpMetricValue, logger)
 		// Only completed backups are considered.
 		if singleBackup.Finished > 0 {
-			compareLastBackups(&lastBackups, singleBackup)
+			lastBackups.compareLastBackups(singleBackup)
 		}
 	}
-	// If full backup exists, the values of metrics for differential backups also will be set.
-	// If not - metrics won't be set.
-	if lastBackups.full.started > 0 {
+	// If at least one backup (full or differential) is finished, set the metrics.
+	if lastBackups.hasFinishedBackups() {
 		getBackupLastMetrics(lastBackups, currentUnixTime, setUpMetricValue, logger)
 	}
 }
