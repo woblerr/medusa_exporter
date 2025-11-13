@@ -309,17 +309,9 @@ func TestInitLastBackupStruct(t *testing.T) {
 			want: lastBackupsStruct{
 				full: backupStruct{
 					backupType: fullLabel,
-					finished:   0,
-					numObjects: 0,
-					size:       0,
-					started:    0,
 				},
 				differential: backupStruct{
 					backupType: differentialLabel,
-					finished:   0,
-					numObjects: 0,
-					size:       0,
-					started:    0,
 				},
 			},
 		},
@@ -329,6 +321,80 @@ func TestInitLastBackupStruct(t *testing.T) {
 			got := initLastBackupStruct()
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("\nVariables do not match:\ngot: %+v\nwant: %+v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHasFinishedBackups(t *testing.T) {
+	tests := []struct {
+		name        string
+		lastBackups lastBackupsStruct
+		want        bool
+	}{
+		{
+			name:        "NoFinishedBackups",
+			lastBackups: initLastBackupStruct(),
+			want:        false,
+		},
+		{
+			name: "OnlyFullFinished",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+				},
+			},
+			want: true,
+		},
+		{
+			name: "OnlyDifferentialFinished",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
+				},
+			},
+			want: true,
+		},
+		{
+			name: "BothFinished",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697722000,
+					finished:   1697722100,
+					size:       512,
+					numObjects: 50,
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.lastBackups.hasFinishedBackups()
+			if got != tt.want {
+				t.Errorf("\nVariables do not match:\ngot: %v\nwant: %v", got, tt.want)
 			}
 		})
 	}
@@ -361,10 +427,6 @@ func TestCompareLastBackups(t *testing.T) {
 				},
 				differential: backupStruct{
 					backupType: differentialLabel,
-					started:    1697711900,
-					finished:   1697712000,
-					size:       1024,
-					numObjects: 100,
 				},
 			},
 		},
@@ -381,10 +443,6 @@ func TestCompareLastBackups(t *testing.T) {
 			wantBackups: lastBackupsStruct{
 				full: backupStruct{
 					backupType: fullLabel,
-					started:    1697711900,
-					finished:   1697712000,
-					size:       512,
-					numObjects: 50,
 				},
 				differential: backupStruct{
 					backupType: differentialLabel,
@@ -430,15 +488,15 @@ func TestCompareLastBackups(t *testing.T) {
 				},
 				differential: backupStruct{
 					backupType: differentialLabel,
-					started:    1697722000,
-					finished:   1697722100,
-					size:       2048,
-					numObjects: 200,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       1024,
+					numObjects: 100,
 				},
 			},
 		},
 		{
-			name: "OlderFullBackup",
+			name: "OlderFullBackupIgnored",
 			lastBackups: lastBackupsStruct{
 				full: backupStruct{
 					backupType: fullLabel,
@@ -449,10 +507,10 @@ func TestCompareLastBackups(t *testing.T) {
 				},
 				differential: backupStruct{
 					backupType: differentialLabel,
-					started:    1697722000,
-					finished:   1697722100,
-					size:       2048,
-					numObjects: 200,
+					started:    1697732000,
+					finished:   1697732100,
+					size:       1536,
+					numObjects: 150,
 				},
 			},
 			backupData: backup{
@@ -472,10 +530,10 @@ func TestCompareLastBackups(t *testing.T) {
 				},
 				differential: backupStruct{
 					backupType: differentialLabel,
-					started:    1697722000,
-					finished:   1697722100,
-					size:       2048,
-					numObjects: 200,
+					started:    1697732000,
+					finished:   1697732100,
+					size:       1536,
+					numObjects: 150,
 				},
 			},
 		},
@@ -522,12 +580,12 @@ func TestCompareLastBackups(t *testing.T) {
 			},
 		},
 		{
-			name: "OlderDifferentialAfterFull",
+			name: "OlderDifferentialBackupIgnored",
 			lastBackups: lastBackupsStruct{
 				full: backupStruct{
 					backupType: fullLabel,
-					started:    1697722000,
-					finished:   1697722100,
+					started:    1697711900,
+					finished:   1697712000,
 					size:       2048,
 					numObjects: 200,
 				},
@@ -535,8 +593,8 @@ func TestCompareLastBackups(t *testing.T) {
 					backupType: differentialLabel,
 					started:    1697722000,
 					finished:   1697722100,
-					size:       2048,
-					numObjects: 200,
+					size:       1536,
+					numObjects: 150,
 				},
 			},
 			backupData: backup{
@@ -549,8 +607,8 @@ func TestCompareLastBackups(t *testing.T) {
 			wantBackups: lastBackupsStruct{
 				full: backupStruct{
 					backupType: fullLabel,
-					started:    1697722000,
-					finished:   1697722100,
+					started:    1697711900,
+					finished:   1697712000,
 					size:       2048,
 					numObjects: 200,
 				},
@@ -558,8 +616,8 @@ func TestCompareLastBackups(t *testing.T) {
 					backupType: differentialLabel,
 					started:    1697722000,
 					finished:   1697722100,
-					size:       2048,
-					numObjects: 200,
+					size:       1536,
+					numObjects: 150,
 				},
 			},
 		},
@@ -598,10 +656,10 @@ func TestCompareLastBackups(t *testing.T) {
 				},
 				differential: backupStruct{
 					backupType: differentialLabel,
-					started:    1697722000,
-					finished:   1697722100,
-					size:       2048,
-					numObjects: 200,
+					started:    1697711900,
+					finished:   1697712000,
+					size:       512,
+					numObjects: 50,
 				},
 			},
 		},
@@ -647,10 +705,78 @@ func TestCompareLastBackups(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "NotFinishedFullBackup",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697700000,
+					finished:   1697701000,
+					size:       2048,
+					numObjects: 200,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+				},
+			},
+			backupData: backup{
+				BackupType: fullLabel,
+				Started:    1697711900,
+				Finished:   0,
+				Size:       1024,
+				NumObjects: 100,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+					started:    1697700000,
+					finished:   1697701000,
+					size:       2048,
+					numObjects: 200,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+				},
+			},
+		},
+		{
+			name: "NotFinishedDifferentialBackup",
+			lastBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697700000,
+					finished:   1697701000,
+					size:       1024,
+					numObjects: 100,
+				},
+			},
+			backupData: backup{
+				BackupType: differentialLabel,
+				Started:    1697711900,
+				Finished:   0,
+				Size:       512,
+				NumObjects: 50,
+			},
+			wantBackups: lastBackupsStruct{
+				full: backupStruct{
+					backupType: fullLabel,
+				},
+				differential: backupStruct{
+					backupType: differentialLabel,
+					started:    1697700000,
+					finished:   1697701000,
+					size:       1024,
+					numObjects: 100,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			compareLastBackups(&tt.lastBackups, tt.backupData)
+			tt.lastBackups.compareLastBackups(tt.backupData)
 			if !reflect.DeepEqual(tt.lastBackups, tt.wantBackups) {
 				t.Errorf("\nVariables do not match:\ngot: %+v\nwant: %+v", tt.lastBackups, tt.wantBackups)
 			}

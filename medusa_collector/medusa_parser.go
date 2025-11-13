@@ -27,7 +27,7 @@ const (
 type backupStruct struct {
 	backupType string
 	finished   int64
-	numObjects int
+	numObjects int64
 	size       int64
 	started    int64
 }
@@ -159,42 +159,35 @@ func resetMetrics() {
 }
 
 func initLastBackupStruct() lastBackupsStruct {
-	lastBackups := lastBackupsStruct{}
-	lastBackups.full.backupType = fullLabel
-	lastBackups.differential.backupType = differentialLabel
-	return lastBackups
+	return lastBackupsStruct{
+		full:         backupStruct{backupType: fullLabel},
+		differential: backupStruct{backupType: differentialLabel},
+	}
 }
 
-func compareLastBackups(lastBackups *lastBackupsStruct, backupData backup) {
+func (l *lastBackupsStruct) hasFinishedBackups() bool {
+	return l.full.finished > 0 || l.differential.finished > 0
+}
+
+// There is no direct dependence of differential on full.
+// Differential does NOT require a full backup.
+// You can only make differential backups — the first one will download all the files,
+// the subsequent ones will link to them.
+func (l *lastBackupsStruct) compareLastBackups(backupData backup) {
 	switch backupData.BackupType {
 	case fullLabel:
-		if backupData.Started > lastBackups.full.started {
-			lastBackups.full.started = backupData.Started
-			lastBackups.full.finished = backupData.Finished
-			lastBackups.full.size = backupData.Size
-			lastBackups.full.numObjects = backupData.NumObjects
-		}
-		if backupData.Started > lastBackups.differential.started {
-			lastBackups.differential.started = backupData.Started
-			lastBackups.differential.finished = backupData.Finished
-			lastBackups.differential.size = backupData.Size
-			lastBackups.differential.numObjects = backupData.NumObjects
+		if backupData.Finished > l.full.finished {
+			l.full.started = backupData.Started
+			l.full.finished = backupData.Finished
+			l.full.size = backupData.Size
+			l.full.numObjects = backupData.NumObjects
 		}
 	case differentialLabel:
-		if backupData.Started > lastBackups.differential.started {
-			lastBackups.differential.started = backupData.Started
-			lastBackups.differential.finished = backupData.Finished
-			lastBackups.differential.size = backupData.Size
-			lastBackups.differential.numObjects = backupData.NumObjects
-		}
-		// If no full backup exists yet, use differential backup data for full backup metrics.
-		// For Medusa differential backup not depends on full backup existence.
-		// If only differential backups exist, full backup metrics also will be set.
-		if lastBackups.full.started == 0 {
-			lastBackups.full.started = backupData.Started
-			lastBackups.full.finished = backupData.Finished
-			lastBackups.full.size = backupData.Size
-			lastBackups.full.numObjects = backupData.NumObjects
+		if backupData.Finished > l.differential.finished {
+			l.differential.started = backupData.Started
+			l.differential.finished = backupData.Finished
+			l.differential.size = backupData.Size
+			l.differential.numObjects = backupData.NumObjects
 		}
 	}
 }
