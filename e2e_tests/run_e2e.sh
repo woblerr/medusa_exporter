@@ -138,8 +138,8 @@ case "${MODE}" in
     '^medusa_node_backup_info{.*,backup_type="full",.*} 1$|1'
     '^medusa_node_backup_objects{.*,backup_type="differential",.*}|1'
     '^medusa_node_backup_objects{.*,backup_type="full",.*}|1'
-    '^medusa_node_backup_size{.*,backup_type="differential",.*}|1'
-    '^medusa_node_backup_size{.*,backup_type="full",.*}|1'
+    '^medusa_node_backup_size_bytes{.*,backup_type="differential",.*}|1'
+    '^medusa_node_backup_size_bytes{.*,backup_type="full",.*}|1'
     '^medusa_node_backup_status{.*,backup_type="differential",.*} 1$|1'
     '^medusa_node_backup_status{.*,backup_type="full",.*} 1$|1'
         )

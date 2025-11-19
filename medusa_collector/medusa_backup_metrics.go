@@ -101,7 +101,7 @@ var (
 			"start_time",
 			"stop_time"})
 	medusaNodeBackupsSizeMetric = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "medusa_node_backup_size",
+		Name: "medusa_node_backup_size_bytes",
 		Help: "Node backup size.",
 	},
 		[]string{
@@ -132,7 +132,7 @@ var (
 //   - medusa_node_backup_info
 //   - medusa_node_backup_status
 //   - medusa_node_backup_duration_seconds
-//   - medusa_node_backup_size
+//   - medusa_node_backup_size_bytes
 //   - medusa_node_backup_objects
 func getBackupMetrics(backupData backup, prefix string, setUpMetricValueFun setUpMetricValueFunType, logger *slog.Logger) {
 	var backupDuration, nodeDuration float64
@@ -289,7 +289,7 @@ func getBackupMetrics(backupData backup, prefix string, setUpMetricValueFun setU
 		// Node backup size.
 		setUpMetric(
 			medusaNodeBackupsSizeMetric,
-			"medusa_node_backup_size",
+			"medusa_node_backup_size_bytes",
 			float64(node.Size),
 			setUpMetricValueFun,
 			logger,
