@@ -29,15 +29,15 @@ cqlsh -e "CREATE KEYSPACE IF NOT EXISTS testks WITH replication = {'class': 'Sim
 cqlsh -e "CREATE TABLE IF NOT EXISTS testks.tbl1 (id int PRIMARY KEY, val text);"
 cqlsh -e "INSERT INTO testks.tbl1 (id, val) VALUES (1, 'first');"
 # Full backup.
-medusa backup --mode full --backup-name "full"
+medusa backup --mode full --backup-name "full_$(date +%Y%m%d%H%M%S)"
 # Insert additional data.
 cqlsh -e "INSERT INTO testks.tbl1 (id, val) VALUES (2, 'second');"
 # Differential backup.
-medusa backup --mode differential --backup-name "differential"
+medusa backup --mode differential --backup-name "differential_$(date +%Y%m%d%H%M%S)"
 # Full backup with prefix.
-medusa --prefix only_full_prefix backup --mode full --backup-name "only_full_prefix"
+medusa --prefix only_full_prefix backup --mode full --backup-name "only_full_prefix_$(date +%Y%m%d%H%M%S)"
 # Only differential backup with prefix.
-medusa --prefix only_diff_prefix backup --mode differential --backup-name "only_diff_prefix"
+medusa --prefix only_diff_prefix backup --mode differential --backup-name "only_diff_prefix_$(date +%Y%m%d%H%M%S)"
 # Update exporter params.
 if [[ -n "${EXPORTER_CONFIG}" ]]; then
 	EXPORTER_COMMAND="${EXPORTER_COMMAND} --web.config.file=${EXPORTER_CONFIG}"

@@ -84,9 +84,9 @@ medusa_node_backup_info{backup_name="test_backup",backup_type="differential",nod
 # HELP medusa_node_backup_objects Number of objects in node backup.
 # TYPE medusa_node_backup_objects gauge
 medusa_node_backup_objects{backup_name="test_backup",backup_type="differential",node_fqdn="node1.example.com"} 100
-# HELP medusa_node_backup_size Node backup size.
-# TYPE medusa_node_backup_size gauge
-medusa_node_backup_size{backup_name="test_backup",backup_type="differential",node_fqdn="node1.example.com"} 1024
+# HELP medusa_node_backup_size_bytes Node backup size.
+# TYPE medusa_node_backup_size_bytes gauge
+medusa_node_backup_size_bytes{backup_name="test_backup",backup_type="differential",node_fqdn="node1.example.com"} 1024
 # HELP medusa_node_backup_status Node backup status.
 # TYPE medusa_node_backup_status gauge
 medusa_node_backup_status{backup_name="test_backup",backup_type="differential",node_fqdn="node1.example.com"} 1
@@ -155,9 +155,9 @@ medusa_node_backup_info{backup_name="test_backup_incomplete",backup_type="differ
 # HELP medusa_node_backup_objects Number of objects in node backup.
 # TYPE medusa_node_backup_objects gauge
 medusa_node_backup_objects{backup_name="test_backup_incomplete",backup_type="differential",node_fqdn="node1.example.com"} 50
-# HELP medusa_node_backup_size Node backup size.
-# TYPE medusa_node_backup_size gauge
-medusa_node_backup_size{backup_name="test_backup_incomplete",backup_type="differential",node_fqdn="node1.example.com"} 512
+# HELP medusa_node_backup_size_bytes Node backup size.
+# TYPE medusa_node_backup_size_bytes gauge
+medusa_node_backup_size_bytes{backup_name="test_backup_incomplete",backup_type="differential",node_fqdn="node1.example.com"} 512
 # HELP medusa_node_backup_status Node backup status.
 # TYPE medusa_node_backup_status gauge
 medusa_node_backup_status{backup_name="test_backup_incomplete",backup_type="differential",node_fqdn="node1.example.com"} 0
