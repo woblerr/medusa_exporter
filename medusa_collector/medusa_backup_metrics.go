@@ -8,6 +8,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+const (
+	statusComplete   = 0
+	statusIncomplete = 1
+	statusMissing    = 2
+)
+
 var (
 	medusaBackupInfoMetric = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "medusa_backup_info",
@@ -135,9 +141,6 @@ var (
 //   - medusa_node_backup_size_bytes
 //   - medusa_node_backup_objects
 func getBackupMetrics(backupData backup, prefix string, setUpMetricValueFun setUpMetricValueFunType, logger *slog.Logger) {
-	var backupDuration, nodeDuration float64
-	var backupStopTime, nodeStopTime string
-
 	if prefix == "" {
 		prefix = noPrefixLabel
 	}
@@ -155,29 +158,21 @@ func getBackupMetrics(backupData backup, prefix string, setUpMetricValueFun setU
 		time.Unix(backupData.Started, 0).Format(layout),
 	)
 	// Backup status.
-	//  1 - backup is complete.
-	//  0 - backup is not complete.
 	setUpMetric(
 		medusaBackupStatusMetric,
 		"medusa_backup_status",
-		convertBoolToFloat64(backupData.Finished > 0),
+		getBackupStatusCode(backupData.Finished),
 		setUpMetricValueFun,
 		logger,
 		backupData.Name,
 		backupData.BackupType,
 	)
 	// Backup duration.
-	if backupData.Finished == 0 {
-		backupDuration = 0
-		backupStopTime = noneLabel
-	} else {
-		backupDuration = float64(backupData.Finished - backupData.Started)
-		backupStopTime = time.Unix(backupData.Finished, 0).Format(layout)
-	}
+	backupDuration, backupStopTime := calculateDuration(backupData.Started, backupData.Finished)
 	setUpMetric(
 		medusaBackupDurationMetric,
 		"medusa_backup_duration_seconds",
-		float64(backupDuration),
+		backupDuration,
 		setUpMetricValueFun,
 		logger,
 		backupData.Name,
@@ -236,77 +231,48 @@ func getBackupMetrics(backupData backup, prefix string, setUpMetricValueFun setU
 		backupData.BackupType,
 	)
 	// Node backup metrics.
+	// In this case, checking for a Finished field is unnecessary,
+	// because according to Medusa, only completed nodes should be in Nodes.
+	// The rest of the nodes should be IncompleteNodesList or MissingNodesList.
+	// However, there may be bugs in Medusa, so an additional check would not hurt.
 	for _, node := range backupData.Nodes {
-		// Node backup info.
-		//  1 - info about node backup is exist.
-		setUpMetric(
-			medusaNodeBackupsInfosMetric,
-			"medusa_node_backup_info",
-			1,
-			setUpMetricValueFun,
-			logger,
+		setNodeMetrics(
+			node,
 			backupData.Name,
 			backupData.BackupType,
-			node.FQDN,
 			prefix,
-			node.ReleaseVersion,
-			node.ServerType,
-			time.Unix(node.Started, 0).Format(layout),
+			getBackupStatusCode(node.Finished),
+			setUpMetricValueFun,
+			logger,
 		)
-		// Node backup status.
-		//  1 - node backup is complete.
-		//  0 - node backup is not complete.
+	}
+	// Node backup metrics for incomplete nodes.
+	// If node is IncompleteNodesList, status should be incomplete.
+	for _, node := range backupData.IncompleteNodesList {
+		setNodeMetrics(
+			node,
+			backupData.Name,
+			backupData.BackupType,
+			prefix,
+			statusIncomplete,
+			setUpMetricValueFun,
+			logger,
+		)
+	}
+	// Node backup status for missing nodes.
+	// If node is MissingNodesList, status should be missing.
+	for _, nodeFQDN := range backupData.MissingNodesList {
+		// Node backup status for missing nodes.
+		// 2 - node is missing.
 		setUpMetric(
 			medusaNodeBackupsStatusMetric,
 			"medusa_node_backup_status",
-			convertBoolToFloat64(node.Finished > 0),
+			statusMissing,
 			setUpMetricValueFun,
 			logger,
 			backupData.Name,
 			backupData.BackupType,
-			node.FQDN,
-		)
-		// Node backup duration.
-		if node.Finished == 0 {
-			nodeDuration = 0
-			nodeStopTime = noneLabel
-		} else {
-			nodeDuration = float64(node.Finished - node.Started)
-			nodeStopTime = time.Unix(node.Finished, 0).Format(layout)
-		}
-		setUpMetric(
-			medusaNodeBackupDurationMetric,
-			"medusa_node_backup_duration_seconds",
-			float64(nodeDuration),
-			setUpMetricValueFun,
-			logger,
-			backupData.Name,
-			backupData.BackupType,
-			node.FQDN,
-			time.Unix(node.Started, 0).Format(layout),
-			nodeStopTime,
-		)
-		// Node backup size.
-		setUpMetric(
-			medusaNodeBackupsSizeMetric,
-			"medusa_node_backup_size_bytes",
-			float64(node.Size),
-			setUpMetricValueFun,
-			logger,
-			backupData.Name,
-			backupData.BackupType,
-			node.FQDN,
-		)
-		// Node backup objects.
-		setUpMetric(
-			medusaNodeBackupsObjectsMetric,
-			"medusa_node_backup_objects",
-			float64(node.NumObjects),
-			setUpMetricValueFun,
-			logger,
-			backupData.Name,
-			backupData.BackupType,
-			node.FQDN,
+			nodeFQDN,
 		)
 	}
 }
@@ -325,4 +291,90 @@ func resetBackupMetrics() {
 	medusaNodeBackupDurationMetric.Reset()
 	medusaNodeBackupsSizeMetric.Reset()
 	medusaNodeBackupsObjectsMetric.Reset()
+}
+
+func getBackupStatusCode(finished int64) float64 {
+	if finished > 0 {
+		return statusComplete
+	}
+	return statusIncomplete
+}
+
+func setNodeMetrics(node node, backupName, backupType, prefix string, status float64, setUpMetricValueFun setUpMetricValueFunType, logger *slog.Logger) {
+	// Node backup info.
+	//  1 - info about node backup is exist.
+	setUpMetric(
+		medusaNodeBackupsInfosMetric,
+		"medusa_node_backup_info",
+		1,
+		setUpMetricValueFun,
+		logger,
+		backupName,
+		backupType,
+		node.FQDN,
+		prefix,
+		node.ReleaseVersion,
+		node.ServerType,
+		time.Unix(node.Started, 0).Format(layout),
+	)
+	// Node backup status.
+	setUpMetric(
+		medusaNodeBackupsStatusMetric,
+		"medusa_node_backup_status",
+		status,
+		setUpMetricValueFun,
+		logger,
+		backupName,
+		backupType,
+		node.FQDN,
+	)
+	// Node backup duration.
+	nodeDuration, nodeStopTime := calculateDuration(node.Started, node.Finished)
+	setUpMetric(
+		medusaNodeBackupDurationMetric,
+		"medusa_node_backup_duration_seconds",
+		nodeDuration,
+		setUpMetricValueFun,
+		logger,
+		backupName,
+		backupType,
+		node.FQDN,
+		time.Unix(node.Started, 0).Format(layout),
+		nodeStopTime,
+	)
+	// Node backup size.
+	setUpMetric(
+		medusaNodeBackupsSizeMetric,
+		"medusa_node_backup_size_bytes",
+		float64(node.Size),
+		setUpMetricValueFun,
+		logger,
+		backupName,
+		backupType,
+		node.FQDN,
+	)
+	// Node backup objects.
+	setUpMetric(
+		medusaNodeBackupsObjectsMetric,
+		"medusa_node_backup_objects",
+		float64(node.NumObjects),
+		setUpMetricValueFun,
+		logger,
+		backupName,
+		backupType,
+		node.FQDN,
+	)
+}
+
+func calculateDuration(started, finished int64) (float64, string) {
+	var duration float64
+	var stopTime string
+	if finished == 0 {
+		duration = 0
+		stopTime = noneLabel
+	} else {
+		duration = float64(finished - started)
+		stopTime = time.Unix(finished, 0).Format(layout)
+	}
+	return duration, stopTime
 }

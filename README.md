@@ -16,7 +16,7 @@ Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/c
 | Metric | Description |  Labels | Additional Info |
 | ----------- | ------------------ | ------------- | --------------- |
 | `medusa_backup_info` | backup info | backup_name, backup_type, prefix, start_time | Values description:<br> `1` - info about backup is exist. |
-| `medusa_backup_status` | backup status | backup_name, backup_type | Values description:<br> `0` - backup is not complete,<br> `1` - backup is complete. |
+| `medusa_backup_status` | backup status | backup_name, backup_type | Values description:<br> `0` - backup is complete,<br> `1` - backup is not complete. |
 | `medusa_backup_duration_seconds` | backup duration in seconds | backup_name, backup_type, start_time, stop_time | |
 | `medusa_backup_size_bytes` | backup size in bytes | backup_name, backup_type | |
 | `medusa_backup_objects` | number of objects in backup | backup_name, backup_type | |
@@ -24,7 +24,7 @@ Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/c
 | `medusa_backup_incomplete_nodes` | number of incomplete nodes in backup | backup_name, backup_type | |
 | `medusa_backup_missing_nodes` | number of missing nodes in backup | backup_name, backup_type | |
 | `medusa_node_backup_info` | node backup info | backup_name, backup_type, node_fqdn, prefix, release_version, server_type, start_time | Values description:<br> `1` - info about node backup is exist. |
-| `medusa_node_backup_status` | node backup status | backup_name, backup_type, node_fqdn | Values description:<br> `0` - node backup is not complete,<br> `1` - node backup is complete. |
+| `medusa_node_backup_status` | node backup status | backup_name, backup_type, node_fqdn | Values description:<br> `0` - node backup is complete,<br> `1` - node backup is incomplete,<br> `2` - node is missing. |
 | `medusa_node_backup_duration_seconds` | node backup duration in seconds | backup_name, backup_type, node_fqdn, start_time, stop_time | |
 | `medusa_node_backup_size_bytes` | node backup size in bytes | backup_name, backup_type, node_fqdn | |
 | `medusa_node_backup_objects` | number of objects in node backup | backup_name, backup_type, node_fqdn | |
