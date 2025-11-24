@@ -80,10 +80,10 @@ case "${MODE}" in
     '^medusa_backup_last_objects{backup_type="full"}|0'
     '^medusa_backup_last_size_bytes{backup_type="differential"}|1'
     '^medusa_backup_last_size_bytes{backup_type="full"}|0'
-    '^medusa_backup_status{.*,backup_type="differential"} 1$|1'
+    '^medusa_backup_status{.*,backup_type="differential"} 0$|1'
     '^medusa_exporter_status{prefix="only_diff_prefix"} 1$|1'
     '^medusa_node_backup_info{.*,backup_type="differential",.*} 1$|1'
-    '^medusa_node_backup_status{.*,backup_type="differential",.*} 1$|1'
+    '^medusa_node_backup_status{.*,backup_type="differential",.*} 0$|1'
         )
         ;;
     "only_full_prefix")
@@ -98,10 +98,10 @@ case "${MODE}" in
     '^medusa_backup_last_objects{backup_type="full"}|1'
     '^medusa_backup_last_size_bytes{backup_type="differential"}|0'
     '^medusa_backup_last_size_bytes{backup_type="full"}|1'
-    '^medusa_backup_status{.*,backup_type="full"} 1$|1'
+    '^medusa_backup_status{.*,backup_type="full"} 0$|1'
     '^medusa_exporter_status{prefix="only_full_prefix"} 1$|1'
     '^medusa_node_backup_info{.*,backup_type="full",.*} 1$|1'
-    '^medusa_node_backup_status{.*,backup_type="full",.*} 1$|1'
+    '^medusa_node_backup_status{.*,backup_type="full",.*} 0$|1'
         )
         ;;
     *)
@@ -128,8 +128,8 @@ case "${MODE}" in
     '^medusa_backup_since_last_completion_seconds{backup_type="full"}|1'
     '^medusa_backup_size_bytes{.*,backup_type="differential"}|1'
     '^medusa_backup_size_bytes{.*,backup_type="full"}|1'
-    '^medusa_backup_status{.*,backup_type="differential"} 1$|1'
-    '^medusa_backup_status{.*,backup_type="full"} 1$|1'
+    '^medusa_backup_status{.*,backup_type="differential"} 0$|1'
+    '^medusa_backup_status{.*,backup_type="full"} 0$|1'
     '^medusa_exporter_build_info{.*} 1$|1'
     '^medusa_exporter_status{prefix="no-prefix"} 1$|1'
     '^medusa_node_backup_duration_seconds{.*,backup_type="differential",.*"}|1'
@@ -140,8 +140,8 @@ case "${MODE}" in
     '^medusa_node_backup_objects{.*,backup_type="full",.*}|1'
     '^medusa_node_backup_size_bytes{.*,backup_type="differential",.*}|1'
     '^medusa_node_backup_size_bytes{.*,backup_type="full",.*}|1'
-    '^medusa_node_backup_status{.*,backup_type="differential",.*} 1$|1'
-    '^medusa_node_backup_status{.*,backup_type="full",.*} 1$|1'
+    '^medusa_node_backup_status{.*,backup_type="differential",.*} 0$|1'
+    '^medusa_node_backup_status{.*,backup_type="full",.*} 0$|1'
         )
         ;;
 esac
