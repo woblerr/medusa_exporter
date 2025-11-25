@@ -146,7 +146,7 @@ func TestParseResult(t *testing.T) {
 					CompletedNodes:      1,
 					Finished:            1697712000,
 					IncompleteNodes:     0,
-					IncompleteNodesList: []string{},
+					IncompleteNodesList: []node{},
 					MissingNodes:        0,
 					MissingNodesList:    []string{},
 					Name:                "test_backup",

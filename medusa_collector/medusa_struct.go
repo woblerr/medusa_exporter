@@ -5,7 +5,7 @@ package medusa_collector
 //	  "completed_nodes": number,
 //	  "finished": number,
 //	  "incomplete_nodes": number,
-//	  "incomplete_nodes_list": [],
+//	  "incomplete_nodes_list": [{}],
 //	  "missing_nodes": number,
 //	  "missing_nodes_list": [],
 //	  "name": "string",
@@ -19,7 +19,7 @@ type backup struct {
 	CompletedNodes      int      `json:"completed_nodes"`
 	Finished            int64    `json:"finished"`
 	IncompleteNodes     int      `json:"incomplete_nodes"`
-	IncompleteNodesList []string `json:"incomplete_nodes_list"`
+	IncompleteNodesList []node   `json:"incomplete_nodes_list"`
 	MissingNodes        int      `json:"missing_nodes"`
 	MissingNodesList    []string `json:"missing_nodes_list"`
 	Name                string   `json:"name"`
