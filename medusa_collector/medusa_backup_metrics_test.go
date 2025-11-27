@@ -251,24 +251,32 @@ medusa_node_backup_duration_seconds{backup_name="test_backup_combined",backup_ty
 medusa_node_backup_duration_seconds{backup_name="test_backup_combined",backup_type="full",node_fqdn="node2.example.com",start_time="2023-10-19 10:38:40",stop_time="2023-10-19 10:40:50"} 130
 medusa_node_backup_duration_seconds{backup_name="test_backup_combined",backup_type="full",node_fqdn="node3.example.com",start_time="2023-10-19 10:39:10",stop_time="none"} 0
 medusa_node_backup_duration_seconds{backup_name="test_backup_combined",backup_type="full",node_fqdn="node4.example.com",start_time="2023-10-19 10:39:20",stop_time="none"} 0
+medusa_node_backup_duration_seconds{backup_name="test_backup_combined",backup_type="full",node_fqdn="node5.example.com",start_time="none",stop_time="none"} 0
+medusa_node_backup_duration_seconds{backup_name="test_backup_combined",backup_type="full",node_fqdn="node6.example.com",start_time="none",stop_time="none"} 0
 # HELP medusa_node_backup_info Node backup info.
 # TYPE medusa_node_backup_info gauge
 medusa_node_backup_info{backup_name="test_backup_combined",backup_type="full",node_fqdn="node1.example.com",prefix="prod",release_version="5.0.4",server_type="cassandra",start_time="2023-10-19 10:38:20"} 1
 medusa_node_backup_info{backup_name="test_backup_combined",backup_type="full",node_fqdn="node2.example.com",prefix="prod",release_version="5.0.4",server_type="cassandra",start_time="2023-10-19 10:38:40"} 1
 medusa_node_backup_info{backup_name="test_backup_combined",backup_type="full",node_fqdn="node3.example.com",prefix="prod",release_version="5.0.4",server_type="cassandra",start_time="2023-10-19 10:39:10"} 1
 medusa_node_backup_info{backup_name="test_backup_combined",backup_type="full",node_fqdn="node4.example.com",prefix="prod",release_version="5.0.4",server_type="cassandra",start_time="2023-10-19 10:39:20"} 1
+medusa_node_backup_info{backup_name="test_backup_combined",backup_type="full",node_fqdn="node5.example.com",prefix="prod",release_version="none",server_type="none",start_time="none"} 1
+medusa_node_backup_info{backup_name="test_backup_combined",backup_type="full",node_fqdn="node6.example.com",prefix="prod",release_version="none",server_type="none",start_time="none"} 1
 # HELP medusa_node_backup_objects Number of objects in node backup.
 # TYPE medusa_node_backup_objects gauge
 medusa_node_backup_objects{backup_name="test_backup_combined",backup_type="full",node_fqdn="node1.example.com"} 100
 medusa_node_backup_objects{backup_name="test_backup_combined",backup_type="full",node_fqdn="node2.example.com"} 100
 medusa_node_backup_objects{backup_name="test_backup_combined",backup_type="full",node_fqdn="node3.example.com"} 0
 medusa_node_backup_objects{backup_name="test_backup_combined",backup_type="full",node_fqdn="node4.example.com"} 0
+medusa_node_backup_objects{backup_name="test_backup_combined",backup_type="full",node_fqdn="node5.example.com"} 0
+medusa_node_backup_objects{backup_name="test_backup_combined",backup_type="full",node_fqdn="node6.example.com"} 0
 # HELP medusa_node_backup_size_bytes Node backup size.
 # TYPE medusa_node_backup_size_bytes gauge
 medusa_node_backup_size_bytes{backup_name="test_backup_combined",backup_type="full",node_fqdn="node1.example.com"} 1024
 medusa_node_backup_size_bytes{backup_name="test_backup_combined",backup_type="full",node_fqdn="node2.example.com"} 1024
 medusa_node_backup_size_bytes{backup_name="test_backup_combined",backup_type="full",node_fqdn="node3.example.com"} 0
 medusa_node_backup_size_bytes{backup_name="test_backup_combined",backup_type="full",node_fqdn="node4.example.com"} 0
+medusa_node_backup_size_bytes{backup_name="test_backup_combined",backup_type="full",node_fqdn="node5.example.com"} 0
+medusa_node_backup_size_bytes{backup_name="test_backup_combined",backup_type="full",node_fqdn="node6.example.com"} 0
 # HELP medusa_node_backup_status Node backup status.
 # TYPE medusa_node_backup_status gauge
 medusa_node_backup_status{backup_name="test_backup_combined",backup_type="full",node_fqdn="node1.example.com"} 0
@@ -333,7 +341,6 @@ func TestGetBackupMetricsErrorsAndDebugs(t *testing.T) {
 		name string
 		args args
 	}{
-		// Without backup set size.
 		{
 			"getBackupMetricsLogError",
 			args{
@@ -365,6 +372,49 @@ func TestGetBackupMetricsErrorsAndDebugs(t *testing.T) {
 				fakeSetUpMetricValue,
 				13,
 				13,
+			},
+		},
+		{
+			"getBackupMetricsLogErrorWithIncompleteAndMissingNodes",
+			args{
+				backup{
+					BackupType:      "full",
+					CompletedNodes:  1,
+					Finished:        1697712000,
+					IncompleteNodes: 1,
+					IncompleteNodesList: []node{
+						{
+							Finished:       0,
+							FQDN:           "node2.example.com",
+							NumObjects:     0,
+							ReleaseVersion: "5.0.4",
+							ServerType:     "cassandra",
+							Size:           0,
+							Started:        1697711900,
+						},
+					},
+					MissingNodes:     1,
+					MissingNodesList: []string{"node3.example.com"},
+					Name:             "test_backup",
+					Nodes: []node{
+						{
+							Finished:       1697712000,
+							FQDN:           "node1.example.com",
+							NumObjects:     100,
+							ReleaseVersion: "5.0.4",
+							ServerType:     "cassandra",
+							Size:           1024,
+							Started:        1697711900,
+						},
+					},
+					NumObjects: 100,
+					Size:       0,
+					Started:    1697711900,
+				},
+				"no-prefix",
+				fakeSetUpMetricValue,
+				23,
+				23,
 			},
 		},
 	}
