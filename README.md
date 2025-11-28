@@ -10,6 +10,10 @@ The metrics are collected based on result of `medusa list-backups --output json`
 
 Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/cassandra-medusa/pull/899) PR are required for the exporter.
 
+## Grafana dashboard
+
+To get a dashboard for visualizing the collected metrics, you can use a ready-made dashboard [Medusa Exporter Dashboard](https://github.com/woblerr/medusa_exporter-dashboard) or make your own.
+
 ## Collected metrics
 ### Backup metrics
 
