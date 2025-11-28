@@ -23,11 +23,11 @@ Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/c
 | `medusa_backup_completed_nodes` | number of completed nodes in backup | backup_name, backup_type | |
 | `medusa_backup_incomplete_nodes` | number of incomplete nodes in backup | backup_name, backup_type | |
 | `medusa_backup_missing_nodes` | number of missing nodes in backup | backup_name, backup_type | |
-| `medusa_node_backup_info` | node backup info | backup_name, backup_type, node_fqdn, prefix, release_version, server_type, start_time | Values description:<br> `1` - info about node backup is exist. |
+| `medusa_node_backup_info` | node backup info | backup_name, backup_type, node_fqdn, prefix, release_version, server_type, start_time | Values description:<br> `1` - info about node backup is exist.<br>For missing nodes: `release_version`, `server_type`, and `start_time` labels are set to `none`. |
 | `medusa_node_backup_status` | node backup status | backup_name, backup_type, node_fqdn | Values description:<br> `0` - node backup is complete,<br> `1` - node backup is not complete,<br> `2` - node is missing. |
-| `medusa_node_backup_duration_seconds` | node backup duration in seconds | backup_name, backup_type, node_fqdn, start_time, stop_time | |
-| `medusa_node_backup_size_bytes` | node backup size in bytes | backup_name, backup_type, node_fqdn | |
-| `medusa_node_backup_objects` | number of objects in node backup | backup_name, backup_type, node_fqdn | |
+| `medusa_node_backup_duration_seconds` | node backup duration in seconds | backup_name, backup_type, node_fqdn, start_time, stop_time | For missing nodes: `start_time` and `stop_time` labels are set to `none`, value is `0`. |
+| `medusa_node_backup_size_bytes` | node backup size in bytes | backup_name, backup_type, node_fqdn | For missing nodes: value is `0`. |
+| `medusa_node_backup_objects` | number of objects in node backup | backup_name, backup_type, node_fqdn | For missing nodes: value is `0`. |
 
 ### Last backup metrics
 
@@ -49,7 +49,13 @@ Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/c
 
 For `medusa_backup_duration_seconds` and `medusa_node_backup_duration_seconds` metrics the following logic is applied:
 * if backup/node backup is complete then value calculated;
-* if backup/node backup is not complete, then value is `0`, labels `stop_time` is `none`.
+* if backup/node backup is not complete, then value is `0`, labels `stop_time` is `none`;
+* for missing nodes: value is `0`, labels `start_time` and `stop_time` are set to `none`.
+
+For missing nodes, `medusa_node_backup_*` metrics are set with default values:
+* `medusa_node_backup_info`: labels `release_version`, `server_type`, and `start_time` are set to `none`;
+* `medusa_node_backup_status`: value is `2` (missing);
+* `medusa_node_backup_duration_seconds`, `medusa_node_backup_size_bytes`, `medusa_node_backup_objects`: value is `0`.
 
 For `medusa_*_last_*` metrics the following logic is applied:
   * metrics are calculated only for completed backups;

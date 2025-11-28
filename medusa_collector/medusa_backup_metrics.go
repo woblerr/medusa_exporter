@@ -259,20 +259,24 @@ func getBackupMetrics(backupData backup, prefix string, setUpMetricValueFun setU
 			logger,
 		)
 	}
-	// Node backup status for missing nodes.
-	// If node is MissingNodesList, status should be missing.
+	// Node backup metrics for missing nodes.
 	for _, nodeFQDN := range backupData.MissingNodesList {
-		// Node backup status for missing nodes.
-		// 2 - node is missing.
-		setUpMetric(
-			medusaNodeBackupsStatusMetric,
-			"medusa_node_backup_status",
+		setNodeMetrics(
+			node{
+				Finished:       0,
+				FQDN:           nodeFQDN,
+				NumObjects:     0,
+				ReleaseVersion: noneLabel,
+				ServerType:     noneLabel,
+				Size:           0,
+				Started:        0,
+			},
+			backupData.Name,
+			backupData.BackupType,
+			prefix,
 			statusMissing,
 			setUpMetricValueFun,
 			logger,
-			backupData.Name,
-			backupData.BackupType,
-			nodeFQDN,
 		)
 	}
 }
@@ -301,6 +305,10 @@ func getBackupStatusCode(finished int64) float64 {
 }
 
 func setNodeMetrics(node node, backupName, backupType, prefix string, status float64, setUpMetricValueFun setUpMetricValueFunType, logger *slog.Logger) {
+	nodeStartTime := noneLabel
+	if node.Started > 0 {
+		nodeStartTime = time.Unix(node.Started, 0).Format(layout)
+	}
 	// Node backup info.
 	//  1 - info about node backup is exist.
 	setUpMetric(
@@ -315,7 +323,7 @@ func setNodeMetrics(node node, backupName, backupType, prefix string, status flo
 		prefix,
 		node.ReleaseVersion,
 		node.ServerType,
-		time.Unix(node.Started, 0).Format(layout),
+		nodeStartTime,
 	)
 	// Node backup status.
 	setUpMetric(
@@ -339,7 +347,7 @@ func setNodeMetrics(node node, backupName, backupType, prefix string, status flo
 		backupName,
 		backupType,
 		node.FQDN,
-		time.Unix(node.Started, 0).Format(layout),
+		nodeStartTime,
 		nodeStopTime,
 	)
 	// Node backup size.
