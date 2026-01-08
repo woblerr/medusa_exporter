@@ -8,8 +8,6 @@ Prometheus exporter for [cassandra-medusa](https://github.com/thelastpickle/cass
 
 The metrics are collected based on result of `medusa list-backups --output json` command. You need to run exporter on the same host where Medusa was installed or inside Docker.
 
-Changes from this [cassandra-medusa/pull/899](https://github.com/thelastpickle/cassandra-medusa/pull/899) PR are required for the exporter.
-
 ## Grafana dashboard
 
 To get a dashboard for visualizing the collected metrics, you can use a ready-made dashboard [Medusa Exporter Dashboard](https://github.com/woblerr/medusa_exporter-dashboard) or make your own.
@@ -68,6 +66,17 @@ For `medusa_*_last_*` metrics the following logic is applied:
   * if both types exist, both labels will be set with their respective latest backups;
   * metrics are not set if no completed backups exist at all.
   * Medusa allows creating only differential backups without full backups - in this case, only `backup_type="differential"` metrics will be available.
+
+
+## Compatibility with cassandra-medusa versions
+
+The number of collected metrics may vary depending on cassandra-medusa version.
+
+For different versions, some metrics may not be collected or have insignificant label values:
+
+* `cassandra-medusa < v0.27.0`
+
+  Changes from [cassandra-medusa/pull/899](https://github.com/thelastpickle/cassandra-medusa/pull/899) PR are required for the exporter.
 
 ## Getting Started
 ### Building and running
