@@ -53,7 +53,7 @@ docker build \
   --file e2e_tests/Dockerfile \
   --tag medusa_exporter_e2e \
   --build-arg CASSANDRA_VERSION=5.0.6 \
-  --build-arg MEDUSA_VERSION=0.25.1 \
+  --build-arg MEDUSA_VERSION=0.28.0 \
   --build-arg MEDUSA_BUILD_TYPE=release \
   .
 ```
