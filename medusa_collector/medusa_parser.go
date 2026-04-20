@@ -70,7 +70,11 @@ func returnPrefixExecArgs(prefix string) []string {
 }
 
 func concatExecArgs(slices [][]string) []string {
-	tmp := []string{}
+	size := 0
+	for _, s := range slices {
+		size += len(s)
+	}
+	tmp := make([]string, 0, size)
 	for _, s := range slices {
 		tmp = append(tmp, s...)
 	}

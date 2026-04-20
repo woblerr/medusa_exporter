@@ -5,7 +5,7 @@ ARG MEDUSA_VERSION="0.28.0"
 ARG MEDUSA_REPO_TAG="master"
 ARG MEDUSA_REPO_URL="https://github.com/thelastpickle/cassandra-medusa"
 
-FROM golang:1.24-bookworm AS builder
+FROM golang:1.26-bookworm AS builder
 ARG REPO_BUILD_TAG
 COPY . /build
 WORKDIR /build
