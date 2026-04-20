@@ -1,6 +1,6 @@
 ARG CASSANDRA_VERSION="5.0.4"
 ARG MEDUSA_BUILD_TYPE="release"
-ARG MEDUSA_VERSION="0.25.1"
+ARG MEDUSA_VERSION="0.28.0"
 # For custom medusa builds
 ARG MEDUSA_REPO_TAG="master"
 ARG MEDUSA_REPO_URL="https://github.com/thelastpickle/cassandra-medusa"
