@@ -119,7 +119,7 @@ For example, `--medusa.config=/tmp/medusa.conf`.
 When `--log.level=debug` is specified - information of values and labels for metrics is printing to the log.
 
 The flag `--web.config.file` allows to specify the path to the configuration for TLS and/or basic authentication.<br>
-The description of TLS configuration and basic authentication can be found at [exporter-toolkit/web](https://github.com/prometheus/exporter-toolkit/blob/v0.14.1/docs/web-configuration.md).
+The description of TLS configuration and basic authentication can be found at [exporter-toolkit/web](https://github.com/prometheus/exporter-toolkit/blob/v0.20.0/docs/web-configuration.md).
 
 
 ### Running as systemd service
