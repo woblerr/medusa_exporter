@@ -1,4 +1,4 @@
-ARG CASSANDRA_VERSION="5.0.4"
+ARG CASSANDRA_VERSION="5.0.9-bookworm"
 ARG MEDUSA_BUILD_TYPE="release"
 ARG MEDUSA_VERSION="0.28.0"
 # For custom medusa builds
@@ -24,19 +24,21 @@ ARG MEDUSA_BUILD_TYPE
 ARG MEDUSA_VERSION
 ARG MEDUSA_REPO_TAG
 ARG MEDUSA_REPO_URL
+ENV PATH="/opt/venv/bin:${PATH}"
 USER root
 RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         wget \
         ca-certificates \
-        python3-pip \
-        python3-setuptools \
+        python3-dev \
+        python3-venv \
         build-essential \
         openssh-server \
     && apt-get autoremove -y \
     && apt-get autopurge -y \
     && rm -rf /var/lib/apt/lists/*
-RUN pip3 install --no-cache-dir --upgrade pip \
+RUN python3 -m venv /opt/venv \
+    && pip3 install --no-cache-dir --upgrade pip \
     && pip3 install --no-cache-dir \
         cassandra-driver \
         tenacity
@@ -57,8 +59,6 @@ RUN apt-get update -y \
         make \
         libffi-dev \
         libssl-dev \
-        python3-dev \
-        python3-venv \
         git \
     && apt-get autoremove -y \
     && apt-get autopurge -y \

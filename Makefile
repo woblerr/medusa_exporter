@@ -31,7 +31,8 @@ test-e2e:
 	$(call e2e_prefix,only_full_prefix)
 	$(call e2e_prefix,only_diff_prefix)
 	$(call e2e_tls_auth,/e2e_tests/web_config_empty.yml,false,false)
-	$(call e2e_tls_auth,/e2e_tests/web_config_TLS_noAuth.yml,true,false)
+	$(call e2e_tls_auth,/e2e_tests/web_config_TLS_noAuth.yml,true,false,,2)
+	$(call e2e_tls_auth,/e2e_tests/web_config_TLS_HTTP1_noAuth.yml,true,false,,1.1)
 	$(call e2e_tls_auth,/e2e_tests/web_config_TLSInLine_noAuth.yml,true,false)
 	$(call e2e_tls_auth,/e2e_tests/web_config_TLS_Auth.yml,true,basic)
 	$(call e2e_tls_auth,/e2e_tests/web_config_noTLS_Auth.yml,false,basic)
@@ -118,21 +119,18 @@ endef
 
 define e2e_basic
 	docker run -d -p $(HTTP_PORT_E2E):$(HTTP_PORT) --name=$(APP_NAME)_e2e $(APP_NAME)_e2e
-	@sleep 60
 	$(ROOT_DIR)/e2e_tests/run_e2e.sh $(HTTP_PORT_E2E)
 	docker rm -f $(APP_NAME)_e2e
 endef
 
 define e2e_prefix
 	docker run -d -p $(HTTP_PORT_E2E):$(HTTP_PORT) --env MEDUSA_PREFIX="${1}" --name=$(APP_NAME)_e2e $(APP_NAME)_e2e
-	@sleep 60
 	$(ROOT_DIR)/e2e_tests/run_e2e.sh $(HTTP_PORT_E2E) false false "" "${1}"
 	docker rm -f $(APP_NAME)_e2e
 endef
 
 define e2e_tls_auth
 	docker run -d -p $(HTTP_PORT_E2E):$(HTTP_PORT) --env EXPORTER_CONFIG="${1}" --name=$(APP_NAME)_e2e $(APP_NAME)_e2e
-	@sleep 60
-	$(ROOT_DIR)/e2e_tests/run_e2e.sh $(HTTP_PORT_E2E) ${2} ${3} "${4}"
+	EXPECTED_HTTP_VERSION="${5}" $(ROOT_DIR)/e2e_tests/run_e2e.sh $(HTTP_PORT_E2E) ${2} ${3} "${4}"
 	docker rm -f $(APP_NAME)_e2e
 endef
