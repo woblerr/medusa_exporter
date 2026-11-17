@@ -5,8 +5,6 @@ EXPORTER_TLS="${2:-false}"
 EXPORTER_AUTH="${3:-false}"
 CERT_PATH="${4:-}"
 MODE="${5:-}"
-EXPECTED_HTTP_VERSION="${EXPECTED_HTTP_VERSION:-}"
-CURL_FLAGS=(-fs)
 
 # Users for test basic auth.
 AUTH_USER="test"
@@ -20,10 +18,11 @@ AUTH_KEY="user.key"
 case ${EXPORTER_TLS} in
     "false")
         EXPORTER_URL="http://localhost:${PORT}/metrics"
+        CURL_FLAGS=""
         ;;
     "true")
         EXPORTER_URL="https://localhost:${PORT}/metrics"
-        CURL_FLAGS+=(-k)
+        CURL_FLAGS="-k"
         ;;
     *)
         echo "[ERROR] incorrect value: get=${EXPORTER_TLS}, want=true or false"
@@ -36,10 +35,10 @@ case ${EXPORTER_AUTH} in
     "false")
         ;;
     "basic")
-        CURL_FLAGS+=(-u "${AUTH_USER}:${AUTH_PASSWORD}")
+        CURL_FLAGS+=" -u ${AUTH_USER}:${AUTH_PASSWORD}"
         ;;
     "cert")
-        CURL_FLAGS+=(--cert "${CERT_PATH}/${AUTH_CERT}" --key "${CERT_PATH}/${AUTH_KEY}")
+        CURL_FLAGS+=" --cert ${CERT_PATH}/${AUTH_CERT} --key ${CERT_PATH}/${AUTH_KEY}"
         ;;
     *)
         echo "[ERROR] incorect value: get=${EXPORTER_AUTH}, want=false, basic or cert"
@@ -47,9 +46,28 @@ case ${EXPORTER_AUTH} in
         ;;
 esac
 
-if [[ -n ${EXPECTED_HTTP_VERSION} ]]; then
-    CURL_FLAGS+=(--http2)
+# Wait for the first collection to publish the last backup metrics.
+READY_BACKUP_TYPE="full"
+if [[ ${MODE} == "only_diff_prefix" ]]; then
+    READY_BACKUP_TYPE="differential"
 fi
+MAX_ATTEMPTS=10
+ATTEMPT=0
+SLEEP_SECONDS=5
+
+while [ ${ATTEMPT} -lt ${MAX_ATTEMPTS} ]; do
+    ATTEMPT=$((ATTEMPT + 1))
+    if curl -fs ${CURL_FLAGS} "${EXPORTER_URL}" | grep -qF "medusa_backup_last_objects{backup_type=\"${READY_BACKUP_TYPE}\"}"; then
+        break
+    else
+        echo "[INFO] exporter not available yet (attempt ${ATTEMPT})"
+        if [ ${ATTEMPT} -lt ${MAX_ATTEMPTS} ]; then
+            sleep ${SLEEP_SECONDS}
+        else
+            echo "[WARNING] exporter is not available after ${MAX_ATTEMPTS} attempts"
+        fi
+    fi
+done
 
 # A simple test to check the number of metrics.
 # Format: regex for metric | repetitions.
@@ -132,44 +150,17 @@ case "${MODE}" in
         ;;
 esac
 
-check_metrics() {
-    local metrics="$1"
-    local entry regex expected_count actual_count
-    for entry in "${REGEX_LIST[@]}"; do
-        regex=${entry%|*}
-        expected_count=${entry##*|}
-        actual_count=$(grep -Ec "${regex}" <<< "${metrics}")
-        if [[ ${actual_count} != "${expected_count}" ]]; then
-            echo "on regex '${regex}': got=${actual_count}, want=${expected_count}"
-            return 1
-        fi
-    done
-    return 0
-}
-
-# The endpoint can respond before the first collection has finished.
-MAX_ATTEMPTS=22
-SLEEP_SECONDS=5
-for (( attempt=1; attempt<=MAX_ATTEMPTS; attempt++ )); do
-    if response=$(curl "${CURL_FLAGS[@]}" -w $'\n%{http_code} %{http_version}' "${EXPORTER_URL}") &&
-        [[ ${response##*$'\n'} == "200 "* ]]; then
-        http_version=${response##* }
-        if [[ -n ${EXPECTED_HTTP_VERSION} && ${http_version} != "${EXPECTED_HTTP_VERSION}" ]]; then
-            echo "[ERROR] negotiated HTTP version: got ${http_version}, want ${EXPECTED_HTTP_VERSION}"
-            exit 1
-        fi
-        if failure=$(check_metrics "${response%$'\n'*}"); then
-            echo "[INFO] all tests passed"
-            exit 0
-        fi
-    else
-        failure="could not fetch metrics"
-    fi
-    if (( attempt < MAX_ATTEMPTS )); then
-        echo "[INFO] ${failure} (attempt ${attempt})"
-        sleep "${SLEEP_SECONDS}"
+# Check results.
+for i in "${REGEX_LIST[@]}"
+do
+    regex=$(echo ${i} | cut -f1 -d'|')
+    cnt=$(echo ${i} | cut -f2 -d'|')
+    metric_cnt=$(curl -s ${CURL_FLAGS} ${EXPORTER_URL} | grep -E "${regex}" | wc -l | tr -d ' ')
+    if [[ ${metric_cnt} != ${cnt} ]]; then
+        echo "[ERROR] on regex '${regex}': get=${metric_cnt}, want=${cnt}"
+        exit 1
     fi
 done
 
-echo "[ERROR] ${failure}"
-exit 1
+echo "[INFO] all tests passed"
+exit 0

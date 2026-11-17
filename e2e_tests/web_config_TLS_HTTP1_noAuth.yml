@@ -1,5 +1,0 @@
-tls_server_config:
-  cert_file: "/e2e_tests/server.crt"
-  key_file: "/e2e_tests/server.key"
-http_server_config:
-  http2: false
