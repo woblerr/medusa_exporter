@@ -52,7 +52,7 @@ or with specific Cassandra and Medusa versions:
 docker build \
   --file e2e_tests/Dockerfile \
   --tag medusa_exporter_e2e \
-  --build-arg CASSANDRA_VERSION=5.0.6 \
+  --build-arg CASSANDRA_VERSION=5.0.9-bookworm \
   --build-arg MEDUSA_VERSION=0.28.0 \
   --build-arg MEDUSA_BUILD_TYPE=release \
   .

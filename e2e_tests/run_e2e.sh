@@ -46,14 +46,18 @@ case ${EXPORTER_AUTH} in
         ;;
 esac
 
-# Check if exporter is available.
+# Wait for the first collection to publish the last backup metrics.
+READY_BACKUP_TYPE="full"
+if [[ ${MODE} == "only_diff_prefix" ]]; then
+    READY_BACKUP_TYPE="differential"
+fi
 MAX_ATTEMPTS=10
 ATTEMPT=0
 SLEEP_SECONDS=5
 
 while [ ${ATTEMPT} -lt ${MAX_ATTEMPTS} ]; do
     ATTEMPT=$((ATTEMPT + 1))
-    if curl -s ${CURL_FLAGS} -o /dev/null -w "%{http_code}" ${EXPORTER_URL} | grep -q "200"; then
+    if curl -fs ${CURL_FLAGS} "${EXPORTER_URL}" | grep -qF "medusa_backup_last_objects{backup_type=\"${READY_BACKUP_TYPE}\"}"; then
         break
     else
         echo "[INFO] exporter not available yet (attempt ${ATTEMPT})"
